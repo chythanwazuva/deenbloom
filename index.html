@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deenbloom by chywazuva</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Fredoka & Nunito -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Canvas Confetti CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Nunito', sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+    h1, h2, h3, .font-display {
+      font-family: 'Fredoka', cursive;
+    }
+    .pop-balloon {
+      animation: floatUp 6s linear infinite;
+    }
+    @keyframes floatUp {
+      0% { transform: translateY(110%) scale(1); opacity: 1; }
+      90% { opacity: 1; }
+      100% { transform: translateY(-120%) scale(1.05); opacity: 0; }
+    }
+    @keyframes bounceGentle {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    .animate-bounce-gentle {
+      animation: bounceGentle 2s infinite ease-in-out;
+    }
+    .card-flip-inner {
+      transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-style: preserve-3d;
+    }
+    .card-flipped .card-flip-inner {
+      transform: rotateY(180deg);
+    }
+    .card-front, .card-back {
+      backface-visibility: hidden;
+    }
+    .card-back {
+      transform: rotateY(180deg);
+    }
+    @keyframes starPop {
+      0% { transform: scale(0) rotate(-45deg); opacity: 0; }
+      70% { transform: scale(1.2) rotate(10deg); opacity: 1; }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+    .animate-star-pop {
+      animation: starPop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col overflow-x-hidden antialiased">
+
+  <!-- Header / Navigation -->
+  <header class="bg-white/80 backdrop-blur-md sticky top-0 z-40 border-b border-slate-100 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3 cursor-pointer" onclick="switchModule('home')">
+        <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-emerald-400 via-teal-400 to-cyan-500 flex items-center justify-center text-white shadow-md shadow-emerald-200 transform hover:scale-105 transition-transform">
+          <i data-lucide="flower-2" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <h1 class="text-xl sm:text-2xl font-bold bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 bg-clip-text text-transparent">DEENBLOOM</h1>
+          <p class="text-xs font-semibold text-slate-400 -mt-1 hidden sm:block">Let Goodness Grow</p>
+        </div>
+      </div>
+
+      <!-- Score & Mute Control -->
+      <div class="flex items-center gap-2 sm:gap-4">
+        <div class="flex items-center gap-2 bg-amber-50 border border-amber-200 px-3.5 py-1.5 rounded-full shadow-sm">
+          <i data-lucide="star" class="w-5 h-5 text-amber-500 fill-amber-400 animate-pulse"></i>
+          <span id="star-count" class="font-extrabold text-amber-600 text-lg">0</span>
+        </div>
+        <button id="sound-toggle" onclick="toggleMute()" class="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-200 transition-colors">
+          <i data-lucide="volume-2" class="w-5 h-5" id="sound-icon"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 flex flex-col items-center justify-center">
+
+    <!-- DASHBOARD MENU (Home) -->
+    <section id="mod-home" class="w-full space-y-6">
+      <div class="text-center max-w-2xl mx-auto my-4 sm:my-6">
+        <span class="inline-block px-4 py-1.5 rounded-full bg-emerald-50 text-emerald-600 font-bold text-xs uppercase tracking-wider mb-2 border border-emerald-100">Let's Play Together!</span>
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-800 tracking-tight">Pilih Permainan Seru Hari Ini!</h2>
+        <p class="text-slate-500 text-sm sm:text-base mt-2">Latih sensorik, logika, memori, dan daya tangkap dengan cara yang menyenangkan.</p>
+      </div>
+
+      <!-- Grid Cards Menu -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 w-full">
+        <div onclick="switchModule('balloon')" class="group relative bg-gradient-to-br from-pink-50 via-white to-red-50 p-6 rounded-3xl border border-pink-100 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 cursor-pointer overflow-hidden">
+          <div class="w-14 h-14 rounded-2xl bg-pink-500 text-white flex items-center justify-center shadow-lg shadow-pink-200 mb-4 group-hover:scale-110 transition-transform">
+            <i data-lucide="circle-dot" class="w-8 h-8"></i>
+          </div>
+          <h3 class="text-xl font-bold text-slate-800 mb-1">Misi Pop Balon</h3>
+          <p class="text-slate-500 text-xs sm:text-sm">Pop balon sesuai misi warna & angka target untuk melatih ketangkasan!</p>
+          <span class="mt-4 inline-flex items-center gap-1.5 text-xs font-bold text-pink-500 group-hover:translate-x-1 transition-transform">Mainkan Sekarang <i data-lucide="arrow-right" class="w-4 h-4"></i></span>
+        </div>
+
+        <div onclick="switchModule('zoo')" class="group relative bg-gradient-to-br from-emerald-50 via-white to-teal-50 p-6 rounded-3xl border border-emerald-100 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 cursor-pointer overflow-hidden">
+          <div class="w-14 h-14 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-200 mb-4 group-hover:scale-110 transition-transform">
+            <i data-lucide="cat" class="w-8 h-8"></i>
+          </div>
+          <h3 class="text-xl font-bold text-slate-800 mb-1">Misi Taman Hewan</h3>
+          <p class="text-slate-500 text-xs sm:text-sm">Beri makan hewan lapar & rawat mereka dengan makanan kesukaan!</p>
+          <span class="mt-4 inline-flex items-center gap-1.5 text-xs font-bold text-emerald-500 group-hover:translate-x-1 transition-transform">Mainkan Sekarang <i data-lucide="arrow-right" class="w-4 h-4"></i></span>
+        </div>
+
+        <div onclick="switchModule('sort')" class="group relative bg-gradient-to-br from-blue-50 via-white to-cyan-50 p-6 rounded-3xl border border-blue-100 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 cursor-pointer overflow-hidden">
+          <div class="w-14 h-14 rounded-2xl bg-blue-500 text-white flex items-center justify-center shadow-lg shadow-blue-200 mb-4 group-hover:scale-110 transition-transform">
+            <i data-lucide="boxes" class="w-8 h-8"></i>
+          </div>
+          <h3 class="text-xl font-bold text-slate-800 mb-1">Memilah & Mengelompokkan</h3>
+          <p class="text-slate-500 text-xs sm:text-sm">Klasifikasikan benda berdasarkan warna, bentuk, atau jenis tempatnya!</p>
+          <span class="mt-4 inline-flex items-center gap-1.5 text-xs font-bold text-blue-500 group-hover:translate-x-1 transition-transform">Mainkan Sekarang <i data-lucide="arrow-right" class="w-4 h-4"></i></span>
+        </div>
+
+        <div onclick="switchModule('puzzle')" class="group relative bg-gradient-to-br from-amber-50 via-white to-orange-50 p-6 rounded-3xl border border-amber-100 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 cursor-pointer overflow-hidden">
+          <div class="w-14 h-14 rounded-2xl bg-amber-500 text-white flex items-center justify-center shadow-lg shadow-amber-200 mb-4 group-hover:scale-110 transition-transform">
+            <i data-lucide="puzzle" class="w-8 h-8"></i>
+          </div>
+          <h3 class="text-xl font-bold text-slate-800 mb-1">Jigsaw Snap Puzzle</h3>
+          <p class="text-slate-500 text-xs sm:text-sm">Pasang potongan puzzle ke bingkai gambar secara pas dan mudah!</p>
+          <span class="mt-4 inline-flex items-center gap-1.5 text-xs font-bold text-amber-500 group-hover:translate-x-1 transition-transform">Mainkan Sekarang <i data-lucide="arrow-right" class="w-4 h-4"></i></span>
+        </div>
+
+        <div onclick="switchModule('memory')" class="group relative bg-gradient-to-br from-purple-50 via-white to-violet-50 p-6 rounded-3xl border border-purple-100 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 cursor-pointer overflow-hidden">
+          <div class="w-14 h-14 rounded-2xl bg-purple-500 text-white flex items-center justify-center shadow-lg shadow-purple-200 mb-4 group-hover:scale-110 transition-transform">
+            <i data-lucide="brain-circuit" class="w-8 h-8"></i>
+          </div>
+          <h3 class="text-xl font-bold text-slate-800 mb-1">Kartu Memori Daya Ingat</h3>
+          <p class="text-slate-500 text-xs sm:text-sm">Cari dan temukan 2 pasangan kartu yang identik dengan daya ingatmu!</p>
+          <span class="mt-4 inline-flex items-center gap-1.5 text-xs font-bold text-purple-500 group-hover:translate-x-1 transition-transform">Mainkan Sekarang <i data-lucide="arrow-right" class="w-4 h-4"></i></span>
+        </div>
+
+        <div onclick="switchModule('logic')" class="group relative bg-gradient-to-br from-indigo-50 via-white to-blue-50 p-6 rounded-3xl border border-indigo-100 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 cursor-pointer overflow-hidden">
+          <div class="w-14 h-14 rounded-2xl bg-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-200 mb-4 group-hover:scale-110 transition-transform">
+            <i data-lucide="sparkle" class="w-8 h-8"></i>
+          </div>
+          <h3 class="text-xl font-bold text-slate-800 mb-1">Pola Logika & Urutan</h3>
+          <p class="text-slate-500 text-xs sm:text-sm">Tebak gambar selanjutnya berdasarkan pola berurutan yang logis!</p>
+          <span class="mt-4 inline-flex items-center gap-1.5 text-xs font-bold text-indigo-500 group-hover:translate-x-1 transition-transform">Mainkan Sekarang <i data-lucide="arrow-right" class="w-4 h-4"></i></span>
+        </div>
+
+        <div onclick="switchModule('paint')" class="group relative bg-gradient-to-br from-rose-50 via-white to-pink-50 p-6 rounded-3xl border border-rose-100 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 cursor-pointer overflow-hidden sm:col-span-2 lg:col-span-3">
+          <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-2xl bg-rose-500 text-white flex items-center justify-center shadow-lg shadow-rose-200 shrink-0 group-hover:scale-110 transition-transform">
+              <i data-lucide="palette" class="w-8 h-8"></i>
+            </div>
+            <div class="flex-1">
+              <h3 class="text-xl font-bold text-slate-800 mb-1">Kanvas Mewarnai & Stempel</h3>
+              <p class="text-slate-500 text-xs sm:text-sm">Ekspresikan kreativitas dengan warna-warni cerah dan stiker emoji!</p>
+            </div>
+            <span class="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold text-rose-500 group-hover:translate-x-1 transition-transform">Mainkan Sekarang <i data-lucide="arrow-right" class="w-4 h-4"></i></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MODULE 1: MISI POP BALON -->
+    <section id="mod-balloon" class="hidden w-full flex-1 flex flex-col space-y-4">
+      <div class="flex items-center justify-between">
+        <button onclick="switchModule('home')" class="px-4 py-2 rounded-2xl bg-white border border-slate-200 text-slate-700 text-sm font-bold flex items-center gap-2 hover:bg-slate-50">
+          <i data-lucide="arrow-left" class="w-4 h-4"></i> Kembali
+        </button>
+        <div id="balloon-mission-box" class="bg-gradient-to-r from-pink-500 to-rose-500 text-white px-5 py-2 rounded-2xl font-bold text-sm sm:text-base shadow-md flex items-center gap-2"></div>
+      </div>
+      <div id="balloon-container" class="relative flex-1 bg-gradient-to-b from-sky-100 via-pink-50 to-white rounded-3xl border border-sky-200 shadow-inner overflow-hidden min-h-[420px] flex items-center justify-center"></div>
+    </section>
+
+    <!-- MODULE 2: MISI TAMAN HEWAN -->
+    <section id="mod-zoo" class="hidden w-full flex-1 flex flex-col space-y-4">
+      <div class="flex items-center justify-between flex-wrap gap-2">
+        <button onclick="switchModule('home')" class="px-4 py-2 rounded-2xl bg-white border border-slate-200 text-slate-700 text-sm font-bold flex items-center gap-2 hover:bg-slate-50">
+          <i data-lucide="arrow-left" class="w-4 h-4"></i> Kembali
+        </button>
+        <div id="zoo-mission-box" class="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-5 py-2 rounded-2xl font-bold text-sm sm:text-base shadow-md flex items-center gap-2"></div>
+      </div>
+      <div class="bg-gradient-to-b from-emerald-100 via-emerald-50 to-teal-50 rounded-3xl border border-emerald-200 p-6 flex flex-col items-center justify-center min-h-[420px] relative overflow-hidden">
+        <div id="zoo-animal-display" class="relative mb-8 text-center cursor-pointer transition-transform hover:scale-105"></div>
+        <div class="w-full max-w-md">
+          <p class="text-center font-bold text-slate-500 text-xs uppercase tracking-wider mb-3">Pilih Makanan yang Tepat:</p>
+          <div id="zoo-food-options" class="grid grid-cols-4 gap-3 sm:gap-4"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MODULE 3: MEMILAH BENDA (PERFECT CENTERED) -->
+    <section id="mod-sort" class="hidden w-full flex-1 flex flex-col space-y-4">
+      <div class="flex items-center justify-between w-full">
+        <button onclick="switchModule('home')" class="px-4 py-2 rounded-2xl bg-white border border-slate-200 text-slate-700 text-sm font-bold flex items-center gap-2 hover:bg-slate-50">
+          <i data-lucide="arrow-left" class="w-4 h-4"></i> Kembali
+        </button>
+        <span class="text-slate-500 font-bold text-sm">Latihan Klasifikasi & Kategori</span>
+      </div>
+
+      <div class="bg-white rounded-3xl border border-slate-200 p-6 sm:p-10 flex flex-col items-center justify-center min-h-[440px] w-full shadow-sm text-center">
+        <h3 id="sort-title" class="text-2xl font-extrabold text-slate-800">Pindah Benda ke Tempat yang Cocok!</h3>
+        <p class="text-slate-400 text-sm mt-1 mb-8">Sentuh benda lalu sentuh kotak tujuannya.</p>
+
+        <!-- Current Item Centered -->
+        <div id="sort-current-item-container" class="mb-10 flex items-center justify-center"></div>
+
+        <!-- Target Bins Centered -->
+        <div id="sort-bins-container" class="flex flex-wrap items-center justify-center gap-4 sm:gap-6 w-full max-w-2xl mx-auto"></div>
+      </div>
+    </section>
+
+    <!-- MODULE 4: JIGSAW SNAP PUZZLE -->
+    <section id="mod-puzzle" class="hidden w-full flex-1 flex flex-col space-y-4">
+      <div class="flex items-center justify-between w-full">
+        <button onclick="switchModule('home')" class="px-4 py-2 rounded-2xl bg-white border border-slate-200 text-slate-700 text-sm font-bold flex items-center gap-2 hover:bg-slate-50">
+          <i data-lucide="arrow-left" class="w-4 h-4"></i> Kembali
+        </button>
+        <span class="text-slate-500 font-bold text-sm">Sentuh Potongan lalu Pasang ke Bingkai!</span>
+      </div>
+
+      <div class="bg-white rounded-3xl border border-amber-100 p-6 flex flex-col items-center justify-center min-h-[440px] w-full shadow-sm">
+        <div class="flex flex-col md:flex-row items-center justify-center gap-8 w-full max-w-3xl">
+          <div id="puzzle-board" class="w-64 h-64 sm:w-72 sm:h-72 bg-amber-50 rounded-3xl border-4 border-dashed border-amber-300 grid grid-cols-2 grid-rows-2 p-2 gap-2 relative shadow-inner"></div>
+          <div class="flex flex-col items-center gap-3">
+            <span class="text-xs font-bold text-amber-600 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">Potongan Gambar</span>
+            <div id="puzzle-pieces-tray" class="grid grid-cols-2 gap-3 bg-slate-50 p-4 rounded-3xl border border-slate-200"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MODULE 5: KARTU MEMORI INGATAN -->
+    <section id="mod-memory" class="hidden w-full flex-1 flex flex-col space-y-4">
+      <div class="flex items-center justify-between w-full">
+        <button onclick="switchModule('home')" class="px-4 py-2 rounded-2xl bg-white border border-slate-200 text-slate-700 text-sm font-bold flex items-center gap-2 hover:bg-slate-50">
+          <i data-lucide="arrow-left" class="w-4 h-4"></i> Kembali
+        </button>
+        <button onclick="initMemoryGame()" class="px-3.5 py-1.5 rounded-xl bg-purple-50 text-purple-600 border border-purple-200 text-xs font-bold hover:bg-purple-100 flex items-center gap-1.5">
+          <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Acak Ulang
+        </button>
+      </div>
+
+      <div class="bg-white rounded-3xl border border-purple-100 p-6 flex items-center justify-center min-h-[420px] w-full">
+        <div id="memory-grid" class="grid grid-cols-3 sm:grid-cols-4 gap-3.5 sm:gap-4 max-w-md w-full mx-auto"></div>
+      </div>
+    </section>
+
+    <!-- MODULE 6: POLA LOGIKA URUTAN -->
+    <section id="mod-logic" class="hidden w-full flex-1 flex flex-col space-y-4">
+      <div class="flex items-center justify-between w-full">
+        <button onclick="switchModule('home')" class="px-4 py-2 rounded-2xl bg-white border border-slate-200 text-slate-700 text-sm font-bold flex items-center gap-2 hover:bg-slate-50">
+          <i data-lucide="arrow-left" class="w-4 h-4"></i> Kembali
+        </button>
+        <span class="text-slate-500 font-bold text-sm">Tebak Pola Berikutnya</span>
+      </div>
+
+      <div class="bg-white rounded-3xl border border-indigo-100 p-6 flex flex-col items-center justify-center min-h-[420px] w-full space-y-8">
+        <h3 class="text-xl font-bold text-slate-800 text-center">Gambar Mana yang Melengkapi Pola Ini?</h3>
+        <div id="logic-pattern-row" class="flex items-center justify-center gap-2 sm:gap-4 bg-indigo-50/60 p-4 rounded-3xl border border-indigo-100"></div>
+        <div id="logic-options-row" class="flex items-center justify-center gap-3 sm:gap-4"></div>
+      </div>
+    </section>
+
+    <!-- MODULE 7: KANVAS MEWARNAI -->
+    <section id="mod-paint" class="hidden w-full flex-1 flex flex-col space-y-4">
+      <div class="flex items-center justify-between flex-wrap gap-2 w-full">
+        <button onclick="switchModule('home')" class="px-4 py-2 rounded-2xl bg-white border border-slate-200 text-slate-700 text-sm font-bold flex items-center gap-2 hover:bg-slate-50">
+          <i data-lucide="arrow-left" class="w-4 h-4"></i> Kembali
+        </button>
+        <button onclick="clearPaintCanvas()" class="px-3 py-1.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 text-xs font-bold hover:bg-rose-100 flex items-center gap-1">
+          <i data-lucide="trash-2" class="w-4 h-4"></i> Hapus
+        </button>
+      </div>
+
+      <div class="bg-white rounded-3xl border border-slate-200 p-4 flex flex-col md:flex-row gap-4 items-center justify-center min-h-[440px] w-full">
+        <div class="flex md:flex-col gap-3 overflow-x-auto w-full md:w-auto p-2 border-b md:border-b-0 md:border-r border-slate-100">
+          <div id="color-palette" class="flex md:flex-col gap-2"></div>
+        </div>
+        <div class="flex-1 w-full flex items-center justify-center relative bg-slate-50 rounded-2xl overflow-hidden border border-slate-200">
+          <canvas id="paint-canvas" width="600" height="400" class="w-full h-full max-w-full max-h-[400px] cursor-crosshair touch-none"></canvas>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- CELEBRATION MODAL (FINISHED GAME STARS) -->
+  <div id="celebration-modal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-sm w-full text-center shadow-2xl border-4 border-amber-300 transform scale-100 transition-all flex flex-col items-center">
+      <div class="flex items-center justify-center gap-2 mb-4">
+        <i data-lucide="star" class="w-12 h-12 text-amber-400 fill-amber-400 animate-star-pop"></i>
+        <i data-lucide="star" class="w-16 h-16 text-amber-500 fill-amber-400 animate-star-pop" style="animation-delay: 0.15s"></i>
+        <i data-lucide="star" class="w-12 h-12 text-amber-400 fill-amber-400 animate-star-pop" style="animation-delay: 0.3s"></i>
+      </div>
+      <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-800 mb-1">Hore! Kamu Hebat! 🎉</h3>
+      <p class="text-slate-500 text-sm mb-6">Misi berhasil diselesaikan! Kamu mendapat <span class="font-bold text-amber-500">+3 Bintang</span></p>
+
+      <div class="flex flex-col gap-3 w-full">
+        <button id="modal-next-btn" class="w-full py-3 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-white font-extrabold rounded-2xl shadow-lg shadow-amber-200 active:scale-95 transition-transform flex items-center justify-center gap-2">
+          <span>Lanjut Main</span>
+          <i data-lucide="sparkles" class="w-5 h-5"></i>
+        </button>
+        <button onclick="hideCelebrationModal(); switchModule('home');" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-2xl text-sm transition-colors">
+          Pilih Game Lain
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-100 py-4 text-center text-xs text-slate-400 w-full">
+    <p>© 2026 chywazuva</p>
+  </footer>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    lucide.createIcons();
+
+    let audioCtx = null;
+    let isMuted = false;
+    let totalStars = 0;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+    }
+
+    function playSynthSound(type) {
+      if (isMuted) return;
+      initAudio();
+      if (!audioCtx) return;
+
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      if (type === 'pop') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(400, now);
+        osc.frequency.exponentialRampToValueAtTime(800, now + 0.08);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+        osc.start(now);
+        osc.stop(now + 0.08);
+      } else if (type === 'correct') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(523.25, now);
+        osc.frequency.setValueAtTime(659.25, now + 0.1);
+        osc.frequency.setValueAtTime(783.99, now + 0.2);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.35);
+        osc.start(now);
+        osc.stop(now + 0.35);
+      } else if (type === 'wrong') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(180, now);
+        osc.frequency.linearRampToValueAtTime(110, now + 0.2);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+        osc.start(now);
+        osc.stop(now + 0.2);
+      } else if (type === 'snap') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(300, now);
+        osc.frequency.exponentialRampToValueAtTime(600, now + 0.05);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.05);
+        osc.start(now);
+        osc.stop(now + 0.05);
+      } else if (type === 'fanfare') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(523.25, now);
+        osc.frequency.setValueAtTime(659.25, now + 0.15);
+        osc.frequency.setValueAtTime(783.99, now + 0.3);
+        osc.frequency.setValueAtTime(1046.50, now + 0.45);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.7);
+        osc.start(now);
+        osc.stop(now + 0.7);
+      }
+    }
+
+    function toggleMute() {
+      isMuted = !isMuted;
+      const icon = document.getElementById('sound-icon');
+      if (isMuted) {
+        icon.setAttribute('data-lucide', 'volume-x');
+      } else {
+        icon.setAttribute('data-lucide', 'volume-2');
+        playSynthSound('pop');
+      }
+      lucide.createIcons();
+    }
+
+    function addStars(amount = 1) {
+      totalStars += amount;
+      document.getElementById('star-count').innerText = totalStars;
+    }
+
+    function showCelebrationModal(nextAction) {
+      playSynthSound('fanfare');
+      addStars(3);
+      if (typeof confetti === 'function') {
+        confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
+      }
+      const modal = document.getElementById('celebration-modal');
+      modal.classList.remove('hidden');
+      
+      const nextBtn = document.getElementById('modal-next-btn');
+      nextBtn.onclick = () => {
+        hideCelebrationModal();
+        if (nextAction) nextAction();
+      };
+      lucide.createIcons();
+    }
+
+    function hideCelebrationModal() {
+      document.getElementById('celebration-modal').classList.add('hidden');
+    }
+
+    function switchModule(modId) {
+      initAudio();
+      playSynthSound('pop');
+      hideCelebrationModal();
+      const modules = ['home', 'balloon', 'zoo', 'sort', 'puzzle', 'memory', 'logic', 'paint'];
+      modules.forEach(m => {
+        const el = document.getElementById(`mod-${m}`);
+        if (el) el.classList.add('hidden');
+      });
+      const activeEl = document.getElementById(`mod-${modId}`);
+      if (activeEl) activeEl.classList.remove('hidden');
+
+      if (modId === 'balloon') initBalloonMission();
+      if (modId === 'zoo') initZooMission();
+      if (modId === 'sort') initSortGame();
+      if (modId === 'puzzle') initPuzzleGame();
+      if (modId === 'memory') initMemoryGame();
+      if (modId === 'logic') initLogicGame();
+      if (modId === 'paint') initPaintCanvas();
+    }
+
+    /* 1. MODULE: BALON MISI */
+    const balloonColors = [
+      { name: 'Merah', bg: 'bg-red-400', border: 'border-red-500' },
+      { name: 'Biru', bg: 'bg-blue-400', border: 'border-blue-500' },
+      { name: 'Kuning', bg: 'bg-amber-400', border: 'border-amber-500' },
+      { name: 'Hijau', bg: 'bg-emerald-400', border: 'border-emerald-500' },
+      { name: 'Ungu', bg: 'bg-purple-400', border: 'border-purple-500' }
+    ];
+    let balloonTargetColor = null;
+
+    function initBalloonMission() {
+      const container = document.getElementById('balloon-container');
+      container.innerHTML = '';
+      balloonTargetColor = balloonColors[Math.floor(Math.random() * balloonColors.length)];
+      document.getElementById('balloon-mission-box').innerHTML = `
+        <i data-lucide="target" class="w-5 h-5"></i> Misi: Pop Balon Warna <span class="underline">${balloonTargetColor.name}</span>!
+      `;
+      lucide.createIcons();
+      for (let i = 0; i < 8; i++) spawnBalloon(container);
+    }
+
+    function spawnBalloon(container) {
+      const bColor = balloonColors[Math.floor(Math.random() * balloonColors.length)];
+      const num = Math.floor(Math.random() * 9) + 1;
+      const balloon = document.createElement('div');
+      const leftPos = Math.random() * 80 + 10;
+      const duration = Math.random() * 3 + 4;
+
+      balloon.className = `pop-balloon absolute cursor-pointer w-20 h-24 sm:w-24 sm:h-28 rounded-full ${bColor.bg} border-4 ${bColor.border} flex flex-col items-center justify-center shadow-lg text-white font-extrabold text-2xl border-b-8 active:scale-95 transition-transform`;
+      balloon.style.left = `${leftPos}%`;
+      balloon.style.animationDuration = `${duration}s`;
+      balloon.innerHTML = `<span>${num}</span><div class="w-2 h-4 bg-white/40 rounded-full -mt-4 -ml-4"></div>`;
+
+      balloon.onclick = () => {
+        if (bColor.name === balloonTargetColor.name) {
+          playSynthSound('correct');
+          addStars(1);
+          balloon.remove();
+          setTimeout(() => spawnBalloon(container), 1000);
+        } else {
+          playSynthSound('wrong');
+        }
+      };
+
+      container.appendChild(balloon);
+    }
+
+    /* 2. MODULE: MISI TAMAN HEWAN */
+    const animals = [
+      { name: 'Kucing', favFood: '🐟', foods: ['🐟', '🍌', '🌿', '🥕'], svg: `<svg class="w-32 h-32 sm:w-40 sm:h-40" viewBox="0 0 100 100"><circle cx="50" cy="55" r="35" fill="#FDBA74"/><polygon points="20,25 35,40 15,45" fill="#FB923C"/><polygon points="80,25 65,40 85,45" fill="#FB923C"/><circle cx="38" cy="50" r="5" fill="#1E293B"/><circle cx="62" cy="50" r="5" fill="#1E293B"/><polygon points="50,58 45,63 55,63" fill="#F43F5E"/></svg>` },
+      { name: 'Monyet', favFood: '🍌', foods: ['🍎', '🍌', '🐟', '🦴'], svg: `<svg class="w-32 h-32 sm:w-40 sm:h-40" viewBox="0 0 100 100"><circle cx="50" cy="50" r="35" fill="#D97706"/><circle cx="50" cy="55" r="25" fill="#FDE68A"/><circle cx="20" cy="45" r="10" fill="#D97706"/><circle cx="80" cy="45" r="10" fill="#D97706"/><circle cx="40" cy="48" r="4" fill="#1E293B"/><circle cx="60" cy="48" r="4" fill="#1E293B"/><ellipse cx="50" cy="62" rx="8" ry="4" fill="#78350F"/></svg>` }
+    ];
+    let currentAnimal = null;
+
+    function initZooMission() {
+      currentAnimal = animals[Math.floor(Math.random() * animals.length)];
+      document.getElementById('zoo-mission-box').innerHTML = `<i data-lucide="heart" class="w-5 h-5 fill-white"></i> Misi: Beri makan ${currentAnimal.name}!`;
+      lucide.createIcons();
+      document.getElementById('zoo-animal-display').innerHTML = currentAnimal.svg;
+
+      const foodBox = document.getElementById('zoo-food-options');
+      foodBox.innerHTML = '';
+      currentAnimal.foods.forEach(food => {
+        const card = document.createElement('button');
+        card.className = 'bg-white p-4 rounded-2xl border-2 border-slate-100 shadow-sm text-3xl sm:text-4xl hover:scale-110 active:scale-95 transition-transform flex items-center justify-center';
+        card.innerText = food;
+        card.onclick = () => {
+          if (food === currentAnimal.favFood) {
+            showCelebrationModal(() => initZooMission());
+          } else {
+            playSynthSound('wrong');
+          }
+        };
+        foodBox.appendChild(card);
+      });
+    }
+
+    /* 3. MODULE: MEMILAH BENDA */
+    const sortLevels = [
+      { item: { name: 'Mobil Plastik', icon: '🚗', category: 'Mainan' }, bins: [{ name: 'Buah-Buahan', category: 'Buah', color: 'bg-emerald-50 border-emerald-300' }, { name: 'Mainan', category: 'Mainan', color: 'bg-blue-50 border-blue-300' }] },
+      { item: { name: 'Pisang Segar', icon: '🍌', category: 'Buah' }, bins: [{ name: 'Buah-Buahan', category: 'Buah', color: 'bg-emerald-50 border-emerald-300' }, { name: 'Mainan', category: 'Mainan', color: 'bg-blue-50 border-blue-300' }] }
+    ];
+    let sortIdx = 0;
+
+    function initSortGame() {
+      const lvl = sortLevels[sortIdx % sortLevels.length];
+      const itemBox = document.getElementById('sort-current-item-container');
+      itemBox.innerHTML = `
+        <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-amber-100 border-4 border-amber-300 flex items-center justify-center text-5xl shadow-md animate-bounce-gentle">
+          ${lvl.item.icon}
+        </div>
+      `;
+
+      const binsBox = document.getElementById('sort-bins-container');
+      binsBox.innerHTML = '';
+
+      lvl.bins.forEach(bin => {
+        const binEl = document.createElement('div');
+        binEl.className = `${bin.color} border-4 border-dashed rounded-3xl p-6 flex flex-col items-center justify-center cursor-pointer hover:scale-105 active:scale-95 transition-transform min-w-[160px] min-h-[140px] shadow-sm`;
+        binEl.innerHTML = `
+          <i data-lucide="archive" class="w-10 h-10 text-slate-400 mb-2"></i>
+          <span class="font-extrabold text-slate-700 text-base">${bin.name}</span>
+        `;
+        binEl.onclick = () => {
+          if (bin.category === lvl.item.category) {
+            sortIdx++;
+            showCelebrationModal(() => initSortGame());
+          } else {
+            playSynthSound('wrong');
+          }
+        };
+        binsBox.appendChild(binEl);
+      });
+      lucide.createIcons();
+    }
+
+    /* 4. MODULE: JIGSAW SNAP PUZZLE */
+    const puzzlePieces = [
+      { id: 1, color: 'bg-red-400', icon: '🚗' },
+      { id: 2, color: 'bg-blue-400', icon: '🚌' },
+      { id: 3, color: 'bg-amber-400', icon: '🛺' },
+      { id: 4, color: 'bg-emerald-400', icon: '🚲' }
+    ];
+    let selectedPiece = null;
+    let puzzleSolvedCount = 0;
+
+    function initPuzzleGame() {
+      puzzleSolvedCount = 0;
+      selectedPiece = null;
+      const board = document.getElementById('puzzle-board');
+      const tray = document.getElementById('puzzle-pieces-tray');
+      board.innerHTML = '';
+      tray.innerHTML = '';
+
+      const shuffled = [...puzzlePieces].sort(() => Math.random() - 0.5);
+
+      puzzlePieces.forEach((piece) => {
+        const slot = document.createElement('div');
+        slot.className = 'w-full h-full rounded-2xl border-2 border-dashed border-amber-200 bg-white/50 flex items-center justify-center relative';
+        slot.onclick = () => {
+          if (selectedPiece && selectedPiece.id === piece.id && !slot.dataset.filled) {
+            playSynthSound('snap');
+            slot.dataset.filled = 'true';
+            slot.className = `w-full h-full rounded-2xl ${piece.color} text-white text-4xl flex items-center justify-center shadow-md`;
+            slot.innerHTML = piece.icon;
+            
+            const trayItem = document.getElementById(`piece-tray-${piece.id}`);
+            if (trayItem) trayItem.remove();
+            selectedPiece = null;
+            puzzleSolvedCount++;
+
+            if (puzzleSolvedCount === 4) {
+              setTimeout(() => {
+                showCelebrationModal(() => initPuzzleGame());
+              }, 400);
+            }
+          } else if (selectedPiece && selectedPiece.id !== piece.id) {
+            playSynthSound('wrong');
+          }
+        };
+        board.appendChild(slot);
+      });
+
+      shuffled.forEach(piece => {
+        const pBtn = document.createElement('button');
+        pBtn.id = `piece-tray-${piece.id}`;
+        pBtn.className = `w-20 h-20 rounded-2xl ${piece.color} text-white text-3xl flex items-center justify-center shadow-md hover:scale-105 active:scale-95 transition-transform border-2 border-white`;
+        pBtn.innerText = piece.icon;
+        pBtn.onclick = () => {
+          playSynthSound('pop');
+          document.querySelectorAll('#puzzle-pieces-tray button').forEach(b => b.classList.remove('ring-4', 'ring-amber-400'));
+          pBtn.classList.add('ring-4', 'ring-amber-400');
+          selectedPiece = piece;
+        };
+        tray.appendChild(pBtn);
+      });
+    }
+
+    /* 5. MODULE: KARTU MEMORI INGATAN */
+    const memoryIcons = ['🐱', '🐶', '🐸', '🦁', '🍎', '🍌'];
+    let flippedCards = [];
+    let lockBoard = false;
+
+    function initMemoryGame() {
+      const grid = document.getElementById('memory-grid');
+      grid.innerHTML = '';
+      flippedCards = [];
+      lockBoard = false;
+
+      const items = [...memoryIcons, ...memoryIcons].sort(() => Math.random() - 0.5);
+
+      items.forEach((icon) => {
+        const card = document.createElement('div');
+        card.className = 'w-full h-24 sm:h-28 rounded-2xl cursor-pointer perspective';
+        card.innerHTML = `
+          <div class="card-flip-inner w-full h-full relative rounded-2xl shadow-sm">
+            <div class="card-front absolute inset-0 bg-gradient-to-tr from-purple-500 to-indigo-500 rounded-2xl border-2 border-purple-300 flex items-center justify-center text-white font-bold text-2xl">
+              <i data-lucide="help-circle" class="w-8 h-8 opacity-80"></i>
+            </div>
+            <div class="card-back absolute inset-0 bg-white rounded-2xl border-2 border-purple-200 flex items-center justify-center text-4xl shadow-md">
+              ${icon}
+            </div>
+          </div>
+        `;
+
+        card.onclick = () => {
+          if (lockBoard || card.classList.contains('card-flipped') || flippedCards.includes(card)) return;
+          playSynthSound('pop');
+          card.classList.add('card-flipped');
+          flippedCards.push({ card, icon });
+
+          if (flippedCards.length === 2) {
+            lockBoard = true;
+            if (flippedCards[0].icon === flippedCards[1].icon) {
+              playSynthSound('correct');
+              flippedCards = [];
+              lockBoard = false;
+              if (document.querySelectorAll('.card-flipped').length === items.length) {
+                setTimeout(() => showCelebrationModal(() => initMemoryGame()), 500);
+              }
+            } else {
+              playSynthSound('wrong');
+              setTimeout(() => {
+                flippedCards[0].card.classList.remove('card-flipped');
+                flippedCards[1].card.classList.remove('card-flipped');
+                flippedCards = [];
+                lockBoard = false;
+              }, 1000);
+            }
+          }
+        };
+        grid.appendChild(card);
+      });
+      lucide.createIcons();
+    }
+
+    /* 6. MODULE: POLA LOGIKA URUTAN */
+    const logicQuestions = [
+      { pattern: ['🔴', '🔵', '🔴', '🔵'], answer: '🔴', options: ['🔴', '🟢', '🟡'] },
+      { pattern: ['⭐', '🌙', '⭐', '🌙'], answer: '⭐', options: ['☀️', '⭐', '☁️'] }
+    ];
+    let logicIdx = 0;
+
+    function initLogicGame() {
+      const q = logicQuestions[logicIdx % logicQuestions.length];
+      const pRow = document.getElementById('logic-pattern-row');
+      const oRow = document.getElementById('logic-options-row');
+
+      pRow.innerHTML = '';
+      oRow.innerHTML = '';
+
+      q.pattern.forEach(item => {
+        const box = document.createElement('div');
+        box.className = 'w-14 h-14 sm:w-16 sm:h-16 bg-white rounded-2xl border-2 border-indigo-200 flex items-center justify-center text-3xl shadow-sm';
+        box.innerText = item;
+        pRow.appendChild(box);
+      });
+
+      const qBox = document.createElement('div');
+      qBox.className = 'w-14 h-14 sm:w-16 sm:h-16 bg-indigo-200 border-2 border-indigo-400 rounded-2xl flex items-center justify-center text-2xl font-bold text-indigo-700 animate-pulse';
+      qBox.innerText = '?';
+      pRow.appendChild(qBox);
+
+      q.options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-3xl border-4 border-indigo-100 shadow-md text-4xl flex items-center justify-center hover:scale-110 active:scale-95 transition-transform';
+        btn.innerText = opt;
+        btn.onclick = () => {
+          if (opt === q.answer) {
+            logicIdx++;
+            showCelebrationModal(() => initLogicGame());
+          } else {
+            playSynthSound('wrong');
+          }
+        };
+        oRow.appendChild(btn);
+      });
+    }
+
+    /* 7. MODULE: KANVAS MEWARNAI */
+    let canvas, ctx;
+    let isDrawing = false;
+    let currentColor = '#F43F5E';
+    const paletteColors = ['#F43F5E', '#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#1E293B'];
+
+    function initPaintCanvas() {
+      canvas = document.getElementById('paint-canvas');
+      ctx = canvas.getContext('2d');
+
+      const pBox = document.getElementById('color-palette');
+      pBox.innerHTML = '';
+      paletteColors.forEach(c => {
+        const btn = document.createElement('button');
+        btn.className = 'w-10 h-10 rounded-full border-2 border-white shadow-md hover:scale-110 transition-transform';
+        btn.style.backgroundColor = c;
+        btn.onclick = () => { currentColor = c; playSynthSound('pop'); };
+        pBox.appendChild(btn);
+      });
+
+      canvas.onmousedown = startDraw;
+      canvas.onmousemove = draw;
+      canvas.onmouseup = stopDraw;
+      canvas.ontouchstart = (e) => startDraw(e.touches[0]);
+      canvas.ontouchmove = (e) => draw(e.touches[0]);
+      canvas.ontouchend = stopDraw;
+    }
+
+    function startDraw(e) {
+      isDrawing = true;
+      const rect = canvas.getBoundingClientRect();
+      ctx.beginPath();
+      ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+    }
+
+    function draw(e) {
+      if (!isDrawing) return;
+      const rect = canvas.getBoundingClientRect();
+      ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+      ctx.strokeStyle = currentColor;
+      ctx.lineWidth = 12;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+    }
+
+    function stopDraw() { isDrawing = false; }
+
+    function clearPaintCanvas() {
+      if (ctx && canvas) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        playSynthSound('pop');
+      }
+    }
+  </script>
+</body>
+</html>
